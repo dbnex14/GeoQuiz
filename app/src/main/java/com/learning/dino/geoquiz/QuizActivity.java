@@ -18,6 +18,7 @@ public class QuizActivity extends ActionBarActivity {
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
     private static final String KEY_CHEATER = "cheater";
+    private static final String KEY_CHEAT_INDEX = "index_cheated"; //index of cheated question
 
     private Button mTrueButton;
     private Button mFalseButton;
@@ -37,6 +38,7 @@ public class QuizActivity extends ActionBarActivity {
     };
     private int mCurrentIndex = 0;
     private boolean mIsCheater;
+    private int mCheatIndex = -1;
 
     private void updateQuestion(){
         //Log.d(TAG, "updateQuestion() call for question # " + mCurrentIndex, new Exception());
@@ -70,6 +72,7 @@ public class QuizActivity extends ActionBarActivity {
         //user changes device screen orientation.
         savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
         savedInstanceState.putBoolean(KEY_CHEATER, mIsCheater);
+        savedInstanceState.putInt(KEY_CHEAT_INDEX, mCheatIndex);
     }
 
     @Override
@@ -82,8 +85,8 @@ public class QuizActivity extends ActionBarActivity {
         mQuestionTextView.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                mIsCheater = false;
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+                mIsCheater = (mCheatIndex == mCurrentIndex);
                 updateQuestion(); //tap on text view behave as Next button, too
             }
         });
@@ -126,11 +129,11 @@ public class QuizActivity extends ActionBarActivity {
         mPrevButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                mIsCheater = false;
                 mCurrentIndex = mCurrentIndex - 1;
                 if (mCurrentIndex < 0){
                     mCurrentIndex = mQuestionBank.length - 1;
                 }
+                mIsCheater = (mCheatIndex == mCurrentIndex);
                 updateQuestion();
             }
         });
@@ -139,8 +142,8 @@ public class QuizActivity extends ActionBarActivity {
         mNextButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                mIsCheater = false;
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+                mIsCheater = (mCheatIndex == mCurrentIndex);
                 updateQuestion();
             }
         });
@@ -149,6 +152,7 @@ public class QuizActivity extends ActionBarActivity {
         if (savedInstanceState != null){
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
             mIsCheater = savedInstanceState.getBoolean(KEY_CHEATER, false);
+            mCheatIndex = savedInstanceState.getInt(KEY_CHEAT_INDEX, -1);
         }
 
         updateQuestion();
@@ -160,6 +164,9 @@ public class QuizActivity extends ActionBarActivity {
             return;
         }
         mIsCheater = data.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, false);
+        if (mIsCheater){
+            mCheatIndex = mCurrentIndex; //record current question as cheated
+        }
     }
 
     @Override
