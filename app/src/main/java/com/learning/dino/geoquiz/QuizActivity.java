@@ -17,6 +17,7 @@ public class QuizActivity extends ActionBarActivity {
 
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
+    private static final String KEY_CHEATER = "cheater";
 
     private Button mTrueButton;
     private Button mFalseButton;
@@ -35,6 +36,7 @@ public class QuizActivity extends ActionBarActivity {
         new TrueFalse(R.string.question_oceans, true),
     };
     private int mCurrentIndex = 0;
+    private boolean mIsCheater;
 
     private void updateQuestion(){
         //Log.d(TAG, "updateQuestion() call for question # " + mCurrentIndex, new Exception());
@@ -46,10 +48,14 @@ public class QuizActivity extends ActionBarActivity {
         boolean answerIsTrue = mQuestionBank[mCurrentIndex].ismTrueQuestion();
         int messageResId = 0;
 
-        if (userPressedTrue == answerIsTrue) {
-            messageResId = R.string.correct_toast;
-        } else{
-            messageResId = R.string.incorrect_toast;
+        if (mIsCheater){
+            messageResId = R.string.judgment_toast;
+        }else{
+            if (userPressedTrue == answerIsTrue) {
+                messageResId = R.string.correct_toast;
+            } else{
+                messageResId = R.string.incorrect_toast;
+            }
         }
 
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
@@ -60,12 +66,14 @@ public class QuizActivity extends ActionBarActivity {
         super.onSaveInstanceState(savedInstanceState);
         Log.i(TAG, "onSaveInscanceBundle(Bundle) called");
 
-        //save current question index so you can set it back when orientation changes.
+        //Save current question index and whether user cheated so the data is not lost when
+        //user changes device screen orientation.
         savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
+        savedInstanceState.putBoolean(KEY_CHEATER, mIsCheater);
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate(Bundle) called");
         setContentView(R.layout.activity_quiz);
@@ -74,6 +82,7 @@ public class QuizActivity extends ActionBarActivity {
         mQuestionTextView.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
+                mIsCheater = false;
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
                 updateQuestion(); //tap on text view behave as Next button, too
             }
@@ -103,7 +112,13 @@ public class QuizActivity extends ActionBarActivity {
                 Intent i = new Intent(QuizActivity.this, CheatActivity.class);
                 boolean answerIsTrue = mQuestionBank[mCurrentIndex].ismTrueQuestion();
                 i.putExtra(CheatActivity.EXTRA_ANSWER_IS_TRUE, answerIsTrue);
-                startActivity(i);
+                //startActivity(i); //starts activity, but does not expects any result from it
+
+                //Start activity with expectation of getting a result back.  Pass it your explicit
+                //intent and a user defined integer representing request code.  This request code
+                //is used when an activity starts more than one type of child activity and needs to
+                //tell who is reporting back.
+                startActivityForResult(i, 0);
             }
         });
 
@@ -111,6 +126,7 @@ public class QuizActivity extends ActionBarActivity {
         mPrevButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
+                mIsCheater = false;
                 mCurrentIndex = mCurrentIndex - 1;
                 if (mCurrentIndex < 0){
                     mCurrentIndex = mQuestionBank.length - 1;
@@ -123,6 +139,7 @@ public class QuizActivity extends ActionBarActivity {
         mNextButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
+                mIsCheater = false;
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
                 updateQuestion();
             }
@@ -131,9 +148,18 @@ public class QuizActivity extends ActionBarActivity {
         //get saved info (i.e. if orientation changes, stay on same question)
         if (savedInstanceState != null){
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+            mIsCheater = savedInstanceState.getBoolean(KEY_CHEATER, false);
         }
 
         updateQuestion();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        if (data == null){
+            return;
+        }
+        mIsCheater = data.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, false);
     }
 
     @Override

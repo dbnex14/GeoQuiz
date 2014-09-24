@@ -1,7 +1,9 @@
 package com.learning.dino.geoquiz;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,16 +18,39 @@ public class CheatActivity extends ActionBarActivity {
     //Using your package name as a qualifier for your extra prevents name colisions with extras
     //from other applications.
     public static final String EXTRA_ANSWER_IS_TRUE = "com.learning.dino.geoquiz.answer_is_true";
+    public static final String EXTRA_ANSWER_SHOWN = "com.learning.dino.geoquiz.answer_shown";
+
+    private static final String TAG = "CheatActivity";
+    private static final String KEY_CHEATER = "cheater"; //key-value to record cheat action and save it
 
     private boolean mAnswerIsTrue;
+    private boolean mIsCheater;
 
     private TextView mAnswerTextView;
     private Button mShowAnswerButton;
+
+    private void setAnswerShownResult(boolean isAnswerShown){
+        Intent data = new Intent();
+        data.putExtra(EXTRA_ANSWER_SHOWN, isAnswerShown);
+        setResult(RESULT_OK, data);
+    }
+
+    private void setAnswerTextBox(boolean isTrue){
+        if (isTrue){
+            mAnswerTextView.setText(R.string.true_button);
+        }else{
+            mAnswerTextView.setText(R.string.false_button);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cheat);
+
+        //Answer is not shown until user clicks on button to show it.
+        setAnswerShownResult(false);
+        //mIsCheater = false;
 
         mAnswerIsTrue = getIntent().getBooleanExtra(EXTRA_ANSWER_IS_TRUE, false);
 
@@ -34,13 +59,26 @@ public class CheatActivity extends ActionBarActivity {
         mShowAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mAnswerIsTrue){
-                    mAnswerTextView.setText(R.string.true_button);
-                }else{
-                    mAnswerTextView.setText(R.string.false_button);
-                }
+                mIsCheater = true; //user clicked Show Answer button to cheat.
+                setAnswerTextBox(mAnswerIsTrue);
+                setAnswerShownResult(true); //user viewed answer
             }
         });
+
+        if (savedInstanceState != null){
+            mIsCheater = savedInstanceState.getBoolean(KEY_CHEATER, false);
+            if (mIsCheater){
+                setAnswerTextBox(mAnswerIsTrue); //if orientation changed, show answer is user saw it already
+                setAnswerShownResult(true); //user viewed answer
+            }
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState){
+        super.onSaveInstanceState(savedInstanceState);
+        Log.i(TAG, "onSaveInstanceState called");
+        savedInstanceState.putBoolean(KEY_CHEATER, mIsCheater);
     }
 
     @Override
