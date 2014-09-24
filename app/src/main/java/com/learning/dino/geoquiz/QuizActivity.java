@@ -1,6 +1,9 @@
 package com.learning.dino.geoquiz;
 
+import android.annotation.TargetApi;
+import android.app.ActionBar;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -12,7 +15,15 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/*
 
+ Sep 24, 2014
+    - Reduced minimum SDK to API8 (Froyo)
+    - Added ActionBar display in QuizActivity with guarding for minimum API and TargetAPI Annotation
+    - Added display of API level in CheatActivity.
+
+
+ */
 public class QuizActivity extends ActionBarActivity {
 
     private static final String TAG = "QuizActivity";
@@ -75,11 +86,27 @@ public class QuizActivity extends ActionBarActivity {
         savedInstanceState.putInt(KEY_CHEAT_INDEX, mCheatIndex);
     }
 
+    //Annotation @TargetApi(11) tells Android Lint to ignore possible lint reported errors due to
+    //use of AndroidBar which was added in API11 while our MinSDK is 8.  Even though we guard below
+    //to use ActionBar only if we have API released after Honeycomb, we still need this annotation
+    //to tell Android Lint to surpress errors explicitly.
+    @TargetApi(11)
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate(Bundle) called");
         setContentView(R.layout.activity_quiz);
+
+        //Code below will not compile since MinSDK=8, ActionBar was introduced in API11.
+        //To overcome the issue, you can either raise MinSDK to API11 but that removes support for
+        //majority of Android devices.
+        //Instead, wrap ActionBar code in a conditional statement that checks the device's version
+        //of Android.
+        //ActionBar actionBar = getActionBar();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+            ActionBar actionBar = getActionBar();
+            actionBar.setSubtitle("Bodies of Water");
+        }
 
         mQuestionTextView = (TextView)findViewById(R.id.question_text_view);
         mQuestionTextView.setOnClickListener(new View.OnClickListener(){

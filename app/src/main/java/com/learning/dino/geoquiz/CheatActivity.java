@@ -1,6 +1,7 @@
 package com.learning.dino.geoquiz;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -27,6 +28,7 @@ public class CheatActivity extends ActionBarActivity {
     private boolean mIsCheater;
 
     private TextView mAnswerTextView;
+    private TextView mShowAPI;
     private Button mShowAnswerButton;
 
     private void setAnswerShownResult(boolean isAnswerShown){
@@ -43,6 +45,10 @@ public class CheatActivity extends ActionBarActivity {
         }
     }
 
+    private int getAPILevel(){
+        return Build.VERSION.SDK_INT;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +61,7 @@ public class CheatActivity extends ActionBarActivity {
         mAnswerIsTrue = getIntent().getBooleanExtra(EXTRA_ANSWER_IS_TRUE, false);
 
         mAnswerTextView = (TextView)findViewById(R.id.answerTextView);
+
         mShowAnswerButton = (Button)findViewById(R.id.showAnswerButton);
         mShowAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,6 +79,9 @@ public class CheatActivity extends ActionBarActivity {
                 setAnswerShownResult(true); //user viewed answer
             }
         }
+
+        mShowAPI = (TextView)findViewById(R.id.showAPI);
+        mShowAPI.setText("API level " + Integer.toString(getAPILevel()));
     }
 
     @Override
